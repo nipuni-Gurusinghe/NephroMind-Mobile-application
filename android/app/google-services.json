@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "41618371733",
+    "project_id": "nephromind-8ee81",
+    "storage_bucket": "nephromind-8ee81.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:41618371733:android:ee1a8d54be860d1cbd579c",
+        "android_client_info": {
+          "package_name": "com.example.nephromind"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4ON_DkxANifYVrxzs_OUlS9SLwDUeIDQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
