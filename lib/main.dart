@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:nephromind/dashboard_screen.dart'; // Import the new file
+import 'package:nephromind/welcome_screen.dart'; // NEW: Import WelcomeScreen
+import 'package:nephromind/dashboard_screen.dart';
+import 'package:nephromind/registration_screen.dart'; // NEW: Import RegistrationScreen
 
 void main() {
   runApp(const MyApp());
@@ -13,17 +15,21 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'NephroMind Demo',
       theme: ThemeData(
-        // Set your main app theme here
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6A1B9A)), // Using the deep purple color
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6A1B9A)),
         useMaterial3: true,
       ),
-      // Use your new dashboard screen as the home page
-      home: const DashboardScreen(),
+      // NEW: Define routes for navigation
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const WelcomeScreen(), // The starting screen
+        '/dashboard': (context) => const DashboardScreen(),
+        '/register': (context) => const RegistrationScreen(),
+      },
+      // You can remove the 'home' property now that 'initialRoute' is set
+      // home: const DashboardScreen(), // Removed
     );
   }
 }
 
-// The MyHomePage, _MyHomePageState, and the main.dart counter logic
-// are no longer needed if this screen is the new home.
-// You can delete them, or keep them if you plan to use them elsewhere.
-// But for the purpose of the new UI, you only need MyApp() and DashboardScreen().
+// NOTE: The Counter logic (MyHomePage, _MyHomePageState) is assumed to be deleted
+// or kept only if still used for other purposes, as noted in your original main.dart.
