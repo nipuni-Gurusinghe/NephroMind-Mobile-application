@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 import 'WaterInside.dart';
+import 'ProfileScreen.dart'; // <-- Add this
 // ... rest of the imports
 
 class DashboardScreen extends StatelessWidget {
@@ -293,6 +294,12 @@ class DashboardScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         currentIndex: 0, // Assuming Home is the initial selected tab
         onTap: (index) {
+          if (index == 4) { // Index 4 is the Profile tab
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            );
+          }
           // Handle navigation here
         },
         items: const [
