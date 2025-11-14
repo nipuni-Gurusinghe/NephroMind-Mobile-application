@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'WaterInside.dart';
+// ... rest of the imports
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -218,16 +221,23 @@ class DashboardScreen extends StatelessWidget {
                     backgroundColor: cardBackgroundLight,
                     showButton: true,
                   ),
+                  // The corrected code section (around line 225 in your image)
                   _DashboardCard(
-                    icon: Icons.water_drop,
+                    icon: Icons.water_drop, // <--- ADD THIS LINE
                     iconColor: Colors.lightBlue,
                     title: 'Water Intake',
                     subtitle: '1500 ml / 2000 ml',
-                    progressValue: 0.75, // 1500/2000 = 0.75
+                    progressValue: 0.75,
                     buttonText: 'Log Water',
-                    onTap: () {},
-                    backgroundColor: cardBackgroundLight,
-                    showButton: true,
+                    onTap: () {
+                      // Navigate to the WaterInsideScreen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const WaterInsideScreen()),
+                      );
+                    },
+                    showButton: true, // You might need this if it's set to false by default
+                    backgroundColor: Color(0xFFF8F8F8), // Use the defined cardBackgroundLight
                   ),
                   _DashboardCard(
                     icon: Icons.restaurant,
