@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';   // ⭐ IMPORTANT
 import 'package:nephromind/welcome_screen.dart';
 import 'package:nephromind/dashboard_screen.dart';
 import 'package:nephromind/registration_screen.dart';
+import 'package:nephromind/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const WelcomeScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/register': (context) => const RegistrationScreen(),
+        '/login': (context) => const LoginScreen(),
       },
     );
   }

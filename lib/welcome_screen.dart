@@ -43,14 +43,14 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 50),
 
-              // Login Button (Redirects to DashboardScreen)
+              // Login Button (Redirects to LoginScreen)
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Navigate to DashboardScreen on login
-                    Navigator.pushNamed(context, '/dashboard');
+                    // Navigate to LoginScreen
+                    Navigator.pushNamed(context, '/login');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6A1B9A), // Deep purple
