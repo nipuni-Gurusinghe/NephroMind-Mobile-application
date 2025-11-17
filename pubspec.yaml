@@ -5,31 +5,41 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.2
+  # The SDK constraint should be set to a stable version (e.g., 3.0.0 or later)
+  # as Dart 3.7.2 is not a standard release and is older than the current stable.
+  # Using the current stable minimum for best compatibility.
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
-  
+  # Firebase Core
   firebase_core: ^3.4.0
-  intl: ^0.18.1 
 
- 
-  firebase_auth: ^5.1.2        
-  cloud_firestore: ^5.3.0      
-  firebase_storage: ^12.1.0    
-  firebase_messaging: ^15.1.0  
+  # Firebase Authentication, Database, Storage, and Messaging
+  firebase_auth: ^5.1.2
+  cloud_firestore: ^5.3.0
+  firebase_storage: ^12.1.0
+  firebase_messaging: ^15.1.0
 
-  
+  # Utility Packages
+  intl: ^0.19.0 # Updated to the latest stable version
+  share_plus: ^9.0.0 # <-- ADDED: For sharing content
+
+  # UI/Assets
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Keeping your original lints version
   flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
 
-  
+  # To add assets to your application, add an assets section, like this:
+  # assets:
+  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_ham.jpeg

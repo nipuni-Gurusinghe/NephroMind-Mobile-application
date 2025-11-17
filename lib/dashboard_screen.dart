@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'WaterInside.dart';
-import 'ProfileScreen.dart'; // <-- Add this
-// ... rest of the imports
+import 'ProfileScreen.dart'; 
+import 'CommunityPortalScreen.dart';
+import 'AwarenessProgramme.dart'; // <--- NEW IMPORT
+
+// ... rest of the imports (ensure all imports you listed are present)
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -156,7 +158,6 @@ class DashboardScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               // Placeholder for kidney image as in the original UI
-                              // You might use an Image.asset here
                               Container(
                                 width: 80,
                                 height: 80,
@@ -222,23 +223,21 @@ class DashboardScreen extends StatelessWidget {
                     backgroundColor: cardBackgroundLight,
                     showButton: true,
                   ),
-                  // The corrected code section (around line 225 in your image)
                   _DashboardCard(
-                    icon: Icons.water_drop, // <--- ADD THIS LINE
+                    icon: Icons.water_drop,
                     iconColor: Colors.lightBlue,
                     title: 'Water Intake',
                     subtitle: '1500 ml / 2000 ml',
                     progressValue: 0.75,
                     buttonText: 'Log Water',
                     onTap: () {
-                      // Navigate to the WaterInsideScreen
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const WaterInsideScreen()),
                       );
                     },
-                    showButton: true, // You might need this if it's set to false by default
-                    backgroundColor: Color(0xFFF8F8F8), // Use the defined cardBackgroundLight
+                    showButton: true,
+                    backgroundColor: const Color(0xFFF8F8F8),
                   ),
                   _DashboardCard(
                     icon: Icons.restaurant,
@@ -266,17 +265,29 @@ class DashboardScreen extends StatelessWidget {
                     title: 'Community Portal',
                     subtitle: 'Health Tips & More',
                     buttonText: 'Read Tips',
-                    onTap: () {},
+                    onTap: () {
+                       Navigator.push(
+                         context,
+                         MaterialPageRoute(builder: (context) => const CommunityPortalScreen()),
+                       );
+                    },
                     backgroundColor: cardBackgroundLight,
                     showButton: true,
                   ),
+                  // Awareness Programs Card - NAVIGATION UPDATED HERE
                   _DashboardCard(
                     icon: Icons.campaign,
                     iconColor: Colors.redAccent,
                     title: 'Awareness Programs',
                     subtitle: 'Health Tips & More',
                     buttonText: 'View More',
-                    onTap: () {},
+                    onTap: () {
+                      // <--- NEW NAVIGATION LOGIC
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AwarenessProgramme()),
+                      );
+                    }, // <--- END NEW LOGIC
                     backgroundColor: cardBackgroundLight,
                     showButton: true,
                   ),
@@ -288,19 +299,18 @@ class DashboardScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // Ensures all items are visible
-        selectedItemColor: darkBlueText, // Selected icon color
-        unselectedItemColor: Colors.grey[600], // Unselected icon color
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: darkBlueText,
+        unselectedItemColor: Colors.grey[600],
         backgroundColor: Colors.white,
-        currentIndex: 0, // Assuming Home is the initial selected tab
+        currentIndex: 0,
         onTap: (index) {
-          if (index == 4) { // Index 4 is the Profile tab
+          if (index == 4) {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const ProfileScreen()),
             );
           }
-          // Handle navigation here
         },
         items: const [
           BottomNavigationBarItem(
@@ -308,19 +318,19 @@ class DashboardScreen extends StatelessWidget {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle_outline), // Changed to reflect "Self-Check"
+            icon: Icon(Icons.check_circle_outline),
             label: 'Self-Check',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart), // Changed to reflect "Tracker"
+            icon: Icon(Icons.show_chart),
             label: 'Tracker',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.fastfood), // Changed to reflect "Food"
+            icon: Icon(Icons.fastfood),
             label: 'Food',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person), // Changed to reflect "Profile"
+            icon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],
@@ -329,7 +339,6 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-// Reusable Widget for Dashboard Cards
 class _DashboardCard extends StatelessWidget {
   const _DashboardCard({
     required this.icon,
@@ -350,14 +359,14 @@ class _DashboardCard extends StatelessWidget {
   final String? buttonText;
   final VoidCallback? onTap;
   final Color backgroundColor;
-  final double? progressValue; // For the progress bar in Water Intake
+  final double? progressValue;
   final bool showButton;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       color: backgroundColor,
-      elevation: 0, // Cards appear flat in the new design
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
       ),
@@ -371,7 +380,7 @@ class _DashboardCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Icon(icon, color: iconColor, size: 35),
-              const Spacer(), // Pushes content to top/bottom
+              const Spacer(),
               Text(
                 title,
                 style: const TextStyle(
@@ -395,15 +404,15 @@ class _DashboardCard extends StatelessWidget {
                 LinearProgressIndicator(
                   value: progressValue!,
                   backgroundColor: Colors.grey[300],
-                  color: iconColor, // Progress bar color matches icon
+                  color: iconColor,
                 ),
               ],
               const SizedBox(height: 8),
-              if (showButton && buttonText != null) // Conditional button
+              if (showButton && buttonText != null)
                 Text(
                   buttonText!,
                   style: TextStyle(
-                    color: iconColor, // Button text color matches icon
+                    color: iconColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
