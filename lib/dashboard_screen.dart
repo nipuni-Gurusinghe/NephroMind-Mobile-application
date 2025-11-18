@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'WaterInside.dart';
 import 'ProfileScreen.dart'; 
 import 'CommunityPortalScreen.dart';
-import 'AwarenessProgramme.dart'; // <--- NEW IMPORT
-
-// ... rest of the imports (ensure all imports you listed are present)
+import 'AwarenessProgramme.dart';
+import 'CommunityPortalDataUploader.dart'; // <--- NEW IMPORT
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -18,6 +17,7 @@ class DashboardScreen extends StatelessWidget {
     const Color accentGreen = Color(0xFF81C784); // Green for "Start Check-up" button
     const Color accentOrange = Color(0xFFFFB74D); // Orange for "Risk Level"
     const Color accentPurple = Color(0xFF9C27B0); // Purple for "Community Portal" and profile icon
+    const Color accentRed = Color(0xFFE57373); // Red for new upload button
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -274,7 +274,7 @@ class DashboardScreen extends StatelessWidget {
                     backgroundColor: cardBackgroundLight,
                     showButton: true,
                   ),
-                  // Awareness Programs Card - NAVIGATION UPDATED HERE
+                  // Awareness Programs Card
                   _DashboardCard(
                     icon: Icons.campaign,
                     iconColor: Colors.redAccent,
@@ -282,12 +282,27 @@ class DashboardScreen extends StatelessWidget {
                     subtitle: 'Health Tips & More',
                     buttonText: 'View More',
                     onTap: () {
-                      // <--- NEW NAVIGATION LOGIC
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const AwarenessProgramme()),
                       );
-                    }, // <--- END NEW LOGIC
+                    },
+                    backgroundColor: cardBackgroundLight,
+                    showButton: true,
+                  ),
+                  // NEW: Community Portal Data Uploader Card
+                  _DashboardCard(
+                    icon: Icons.cloud_upload,
+                    iconColor: accentRed,
+                    title: 'Data Uploader',
+                    subtitle: 'Upload Resources\n& Content',
+                    buttonText: 'Upload Now',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CommunityPortalDataUploader()),
+                      );
+                    },
                     backgroundColor: cardBackgroundLight,
                     showButton: true,
                   ),

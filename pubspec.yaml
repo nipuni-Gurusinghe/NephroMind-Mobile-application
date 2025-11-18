@@ -1,13 +1,10 @@
 name: nephromind
-description: "A new Flutter project."
+description: "A Flutter application for kidney health management"
 publish_to: 'none'
 
 version: 1.0.0+1
 
 environment:
-  # The SDK constraint should be set to a stable version (e.g., 3.0.0 or later)
-  # as Dart 3.7.2 is not a standard release and is older than the current stable.
-  # Using the current stable minimum for best compatibility.
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
@@ -15,31 +12,30 @@ dependencies:
     sdk: flutter
 
   # Firebase Core
-  firebase_core: ^3.4.0
+  firebase_core: ^2.24.0  # Downgraded for compatibility
 
-  # Firebase Authentication, Database, Storage, and Messaging
-  firebase_auth: ^5.1.2
-  cloud_firestore: ^5.3.0
-  firebase_storage: ^12.1.0
-  firebase_messaging: ^15.1.0
+  # Firebase Services - Downgraded to compatible versions
+  firebase_auth: ^4.13.0
+  cloud_firestore: ^4.8.0
+  firebase_storage: ^11.2.0
+  firebase_messaging: ^14.6.0
 
-  # Utility Packages
-  intl: ^0.19.0 # Updated to the latest stable version
-  share_plus: ^9.0.0 # <-- ADDED: For sharing content
-
-  # UI/Assets
+  # UI & Media - Moved from dev_dependencies
   cupertino_icons: ^1.0.8
+  url_launcher: ^6.1.0
+  cached_network_image: ^3.2.3
+  share_plus: ^9.0.0
+  
+  # Remove youtube_player_flutter temporarily to avoid conflicts
+  # youtube_player_flutter: ^8.1.2
+  
+  # Utilities
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  # Keeping your original lints version
   flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
-
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
