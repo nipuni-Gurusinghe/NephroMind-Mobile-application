@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';   // ⭐ IMPORTANT
-import 'package:nephromind/welcome_screen.dart';
+import 'package:nephrom /welcome_screen.dart';
 import 'package:nephromind/dashboard_screen.dart';
 import 'package:nephromind/registration_screen.dart';
 import 'package:nephromind/login_screen.dart';
+import 'package:nephromind/DialysisTrackerScreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         '/dashboard': (context) => const DashboardScreen(),
         '/register': (context) => const RegistrationScreen(),
         '/login': (context) => const LoginScreen(),
+        '/appointments': (context) => const DialysisTrackerScreen(),
       },
     );
   }

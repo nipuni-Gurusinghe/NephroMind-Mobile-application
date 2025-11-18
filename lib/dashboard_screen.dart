@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'WaterInside.dart';
 import 'ProfileScreen.dart'; 
 import 'CommunityPortalScreen.dart';
-import 'AwarenessProgramme.dart'; // <--- NEW IMPORT
+import 'AwarenessProgramme.dart';
+import 'DialysisTrackerScreen.dart';
 
 // ... rest of the imports (ensure all imports you listed are present)
 
@@ -219,7 +220,12 @@ class DashboardScreen extends StatelessWidget {
                     title: 'Dialysis Tracker',
                     subtitle: 'Schedule\nAppointment',
                     buttonText: 'Schedule Appointment',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const DialysisTrackerScreen()),
+                      );
+                    },
                     backgroundColor: cardBackgroundLight,
                     showButton: true,
                   ),
