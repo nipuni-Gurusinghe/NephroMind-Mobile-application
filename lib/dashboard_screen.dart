@@ -10,7 +10,6 @@ import 'WaterInside.dart';
 import 'ProfileScreen.dart';
 import 'CommunityPortalScreen.dart';
 import 'DialysisTrackerScreen.dart';
-import 'CommunityPortalDataUploader.dart';
 import 'AwarenessProgramme.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -931,9 +930,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const Color primaryBlue = Color(0xFFE0F7FA);
     const Color darkBlueText = Color(0xFF006064);
     const Color cardBackgroundLight = Color(0xFFF8F8F8);
-    const Color accentGreen = Color(0xFF81C784);
     const Color accentPurple = Color(0xFF9C27B0);
-    const Color accentRed = Color(0xFFE57373);
 
     final User? currentUser = _auth.currentUser;
     final String displayName = currentUser?.displayName ?? "User";
@@ -1035,7 +1032,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 onPressed:
                                     _isLoading ? null : _pickAndUploadPdf,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: accentGreen,
+                                  backgroundColor: const Color(0xFF81C784),
                                   shape: RoundedRectangleBorder(
                                       borderRadius:
                                           BorderRadius.circular(10.0)),
@@ -1135,16 +1132,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     subtitle: 'Health Tips & More',
                     buttonText: 'View More',
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AwarenessProgramme())),
-                    backgroundColor: cardBackgroundLight,
-                    showButton: true,
-                  ),
-                  _DashboardCard(
-                    icon: Icons.cloud_upload,
-                    iconColor: accentRed,
-                    title: 'Data Uploader',
-                    subtitle: 'Upload Resources\n& Content',
-                    buttonText: 'Upload Now',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityPortalDataUploader())),
                     backgroundColor: cardBackgroundLight,
                     showButton: true,
                   ),
