@@ -13,6 +13,7 @@ import 'DialysisTrackerScreen.dart';
 import 'AwarenessProgramme.dart';
 import 'FoodSuggestionScreen.dart';
 import 'DoctorSuggestionScreen.dart';
+import 'LabTrendsScreen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,6 +28,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _hasResult = false;
   bool _isSaved = false;
 
+  int _currentNavIndex = 0;
+
   String _riskLevel = "";
   String _diagnosis = "";
   Color _riskColor = Colors.grey;
@@ -37,7 +40,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  final String apiUrl = "https://ckdbackend-production-70a1.up.railway.app/predict";
+  final String apiUrl = "https://ckdbackend-production.up.railway.app/predict";
 
   static const Map<String, Map<String, String>> _labFieldMeta = {
     'age':    {'label': 'Age',           'unit': 'years'},
@@ -51,6 +54,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'al':     {'label': 'Albumin',       'unit': 'g/dL'},
     'pr':     {'label': 'Total Protein', 'unit': 'g/dL'},
   };
+
+  Future<String> _getDisplayName() async {
+    final user = _auth.currentUser;
+    if (user == null) return "User";
+    try {
+      final doc = await _firestore.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        final name = doc.data()?['fullName'];
+        if (name != null && name.toString().trim().isNotEmpty) {
+          return name.toString().trim();
+        }
+      }
+    } catch (_) {}
+    if (user.displayName != null && user.displayName!.trim().isNotEmpty) {
+      return user.displayName!.trim();
+    }
+    if (user.email != null && user.email!.isNotEmpty) {
+      return user.email!.split('@').first;
+    }
+    return "User";
+  }
 
   Future<void> _pickAndUploadPdf() async {
     try {
@@ -77,7 +101,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final String message = detail is Map
             ? detail['message'] ?? "Invalid medical PDF."
             : detail?.toString() ?? "Invalid medical PDF.";
-        final List<dynamic> fieldsFound = detail is Map ? (detail['fields_found'] ?? []) : [];
+        final List<dynamic> fieldsFound =
+            detail is Map ? (detail['fields_found'] ?? []) : [];
         _showInvalidPdfDialog(message, fieldsFound.length);
         return;
       }
@@ -91,7 +116,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final prediction = data['prediction'];
       final String diagnosis = prediction['diagnosis_label']?.toString() ?? "Unknown";
       final String severityRaw = prediction['severity_label']?.toString() ?? "Unknown";
-      final String severity = (severityRaw == "N/A" || severityRaw == "Unknown") ? "L" : severityRaw;
+      final String severity =
+          (severityRaw == "N/A" || severityRaw == "Unknown") ? "L" : severityRaw;
 
       Color riskColor;
       if (severity == "L") {
@@ -112,6 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _isSaved = false;
         _pendingApiResponse = data;
         _pendingFileName = pickedFileName;
+        _currentNavIndex = 0;
       });
 
       if (mounted) {
@@ -139,19 +166,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: Row(
           children: [
             Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(color: Colors.orange.shade50, shape: BoxShape.circle),
-              child: const Icon(Icons.file_present_outlined, color: Colors.orange, size: 22),
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                  color: Colors.orange.shade50, shape: BoxShape.circle),
+              child: const Icon(Icons.file_present_outlined,
+                  color: Colors.orange, size: 22),
             ),
             const SizedBox(width: 12),
-            const Expanded(child: Text("Invalid PDF", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+            const Expanded(
+                child: Text("Invalid PDF",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(message, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+            Text(message,
+                style: const TextStyle(fontSize: 14, color: Colors.black87)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -163,7 +196,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("What to upload:", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.orange)),
+                  const Text("What to upload:",
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.orange)),
                   const SizedBox(height: 8),
                   _bulletPoint("Kidney Function Test (KFT) report"),
                   _bulletPoint("Blood test with Creatinine / Sodium / Potassium"),
@@ -179,12 +216,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("OK")),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text("OK")),
           ElevatedButton(
-            onPressed: () { Navigator.pop(ctx); _pickAndUploadPdf(); },
+            onPressed: () {
+              Navigator.pop(ctx);
+              _pickAndUploadPdf();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF006064),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text("Try Again", style: TextStyle(color: Colors.white)),
           ),
@@ -200,7 +242,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("• ", style: TextStyle(fontSize: 13, color: Colors.orange)),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87))),
+          Expanded(
+              child: Text(text,
+                  style: const TextStyle(fontSize: 13, color: Colors.black87))),
         ],
       ),
     );
@@ -257,15 +301,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     children: [
                       Container(
-                        width: 40, height: 4,
-                        decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2)),
                       ),
                       const SizedBox(height: 20),
                       const Text("Analysis Complete",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF006064))),
                       const SizedBox(height: 4),
                       Text("Review your results before saving",
-                          style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                          style:
+                              TextStyle(fontSize: 13, color: Colors.grey.shade600)),
                     ],
                   ),
                 ),
@@ -276,17 +327,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 20, horizontal: 16),
                         decoration: BoxDecoration(
                           color: riskColor.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: riskColor.withOpacity(0.3), width: 1.5),
+                          border: Border.all(
+                              color: riskColor.withOpacity(0.3), width: 1.5),
                         ),
                         child: Row(
                           children: [
                             Container(
-                              width: 56, height: 56,
-                              decoration: BoxDecoration(color: riskColor.withOpacity(0.15), shape: BoxShape.circle),
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                  color: riskColor.withOpacity(0.15),
+                                  shape: BoxShape.circle),
                               child: Icon(riskIcon, color: riskColor, size: 30),
                             ),
                             const SizedBox(width: 16),
@@ -294,9 +350,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(riskLabel, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: riskColor)),
+                                  Text(riskLabel,
+                                      style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: riskColor)),
                                   const SizedBox(height: 2),
-                                  Text(diagnosis, style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+                                  Text(diagnosis,
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey.shade700)),
                                 ],
                               ),
                             ),
@@ -315,7 +378,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _sectionHeader(Icons.summarize_outlined, "Diagnosis Summary"),
+                            _sectionHeader(
+                                Icons.summarize_outlined, "Diagnosis Summary"),
                             const SizedBox(height: 12),
                             _buildDetailRow("Diagnosis", diagnosis),
                             const Divider(height: 16),
@@ -323,7 +387,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const Divider(height: 16),
                             _buildDetailRow("File", fileName),
                             const Divider(height: 16),
-                            _buildDetailRow("Date & Time", _formatDateTime(DateTime.now())),
+                            _buildDetailRow(
+                                "Date & Time", _formatDateTime(DateTime.now())),
                           ],
                         ),
                       ),
@@ -342,43 +407,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                _sectionHeader(Icons.biotech_outlined, "Extracted Lab Values"),
+                                _sectionHeader(
+                                    Icons.biotech_outlined, "Extracted Lab Values"),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: extractedCount > 0 ? const Color(0xFF006064) : Colors.grey,
+                                    color: extractedCount > 0
+                                        ? const Color(0xFF006064)
+                                        : Colors.grey,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child: Text("$extractedCount/${extractedData.length} found",
-                                      style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w600)),
+                                  child: Text(
+                                      "$extractedCount/${extractedData.length} found",
+                                      style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600)),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 14),
                             if (extractedData.isEmpty)
-                              Center(child: Text("No lab values extracted from PDF",
-                                  style: TextStyle(fontSize: 13, color: Colors.grey.shade500)))
+                              Center(
+                                  child: Text(
+                                      "No lab values extracted from PDF",
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade500)))
                             else
                               ...extractedData.entries
-                                  .map((entry) => _buildLabValueRow(entry.key, entry.value,
-                                      isLast: entry.key == extractedData.keys.last))
+                                  .map((entry) => _buildLabValueRow(
+                                      entry.key, entry.value,
+                                      isLast:
+                                          entry.key == extractedData.keys.last))
                                   .toList(),
                           ],
                         ),
                       ),
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE0F7FA),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.info_outline, size: 16, color: Color(0xFF006064)),
+                            const Icon(Icons.info_outline,
+                                size: 16, color: Color(0xFF006064)),
                             const SizedBox(width: 8),
-                            Expanded(child: Text("Diagnosis results and lab values will be saved to your health records.",
-                                style: TextStyle(fontSize: 12, color: Colors.grey.shade700))),
+                            Expanded(
+                                child: Text(
+                                    "Diagnosis results and lab values will be saved to your health records.",
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade700))),
                           ],
                         ),
                       ),
@@ -387,19 +472,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.fromLTRB(24, 12, 24, 24 + MediaQuery.of(ctx).viewInsets.bottom),
+                  padding: EdgeInsets.fromLTRB(
+                      24, 12, 24, 24 + MediaQuery.of(ctx).viewInsets.bottom),
                   child: Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () { Navigator.pop(ctx); _showSnackBar("Result not saved."); },
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            _showSnackBar("Result not saved.");
+                          },
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: Colors.grey.shade400),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           child: const Text("Discard",
-                              style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w600)),
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600)),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -411,27 +504,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               : () async {
                                   setSheetState(() {});
                                   setState(() => _isSaving = true);
-                                  final bool saved = await _saveCkdResultToFirestore(_pendingApiResponse!, _pendingFileName);
-                                  setState(() { _isSaving = false; _isSaved = saved; });
+                                  final bool saved =
+                                      await _saveCkdResultToFirestore(
+                                          _pendingApiResponse!,
+                                          _pendingFileName);
+                                  setState(() {
+                                    _isSaving = false;
+                                    _isSaved = saved;
+                                  });
                                   if (mounted) Navigator.pop(ctx);
-                                  if (saved) _showSuccessSnackBar("✓ Result saved to your health records!");
+                                  if (saved)
+                                    _showSuccessSnackBar(
+                                        "✓ Result saved to your health records!");
                                 },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF006064),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             elevation: 0,
                           ),
                           child: _isSaving
-                              ? const SizedBox(height: 20, width: 20,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2))
                               : const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.cloud_upload_outlined, color: Colors.white, size: 18),
+                                    Icon(Icons.cloud_upload_outlined,
+                                        color: Colors.white, size: 18),
                                     SizedBox(width: 8),
                                     Text("Save to Records",
-                                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                         ),
@@ -447,22 +556,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Future<bool> _saveCkdResultToFirestore(Map<String, dynamic> fullApiResponse, String fileName) async {
+  Future<bool> _saveCkdResultToFirestore(
+      Map<String, dynamic> fullApiResponse, String fileName) async {
     final User? currentUser = _auth.currentUser;
-    if (currentUser == null) { _showSnackBar("Error: No logged-in user found."); return false; }
+    if (currentUser == null) {
+      _showSnackBar("Error: No logged-in user found.");
+      return false;
+    }
 
     final String userId = currentUser.uid;
-    if (!fullApiResponse.containsKey('prediction')) { _showSnackBar("Error: Unexpected API response format."); return false; }
+    if (!fullApiResponse.containsKey('prediction')) {
+      _showSnackBar("Error: Unexpected API response format.");
+      return false;
+    }
 
     final prediction = fullApiResponse['prediction'] as Map<String, dynamic>;
-    final Map<String, dynamic> extracted = fullApiResponse['extracted_data'] as Map<String, dynamic>? ?? {};
+    final Map<String, dynamic> extracted =
+        fullApiResponse['extracted_data'] as Map<String, dynamic>? ?? {};
 
     String severityCode = prediction['severity_label']?.toString() ?? "Unknown";
     String severityFull = severityCode;
     if (severityCode == "L") severityFull = "Low";
     if (severityCode == "M") severityFull = "Medium";
     if (severityCode == "H") severityFull = "High";
-    if (severityCode == "N/A" || severityCode == "Unknown") { severityFull = "Low"; severityCode = "L"; }
+    if (severityCode == "N/A" || severityCode == "Unknown") {
+      severityFull = "Low";
+      severityCode = "L";
+    }
 
     final Map<String, dynamic> ckdRecord = {
       'userId': userId,
@@ -471,16 +591,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'diagnosisLabel': prediction['diagnosis_label']?.toString() ?? "Unknown",
       'severityLabel': severityFull,
       'severityCode': severityCode,
-      'lab_age':    extracted['age'],
+      'lab_age': extracted['age'],
       'lab_gender': extracted['gender'],
-      'lab_cr':     extracted['cr'],
-      'lab_ua':     extracted['ua'],
-      'lab_ca':     extracted['ca'],
-      'lab_na':     extracted['na'],
-      'lab_k':      extracted['k'],
-      'lab_cl':     extracted['cl'],
-      'lab_al':     extracted['al'],
-      'lab_pr':     extracted['pr'],
+      'lab_cr': extracted['cr'],
+      'lab_ua': extracted['ua'],
+      'lab_ca': extracted['ca'],
+      'lab_na': extracted['na'],
+      'lab_k': extracted['k'],
+      'lab_cl': extracted['cl'],
+      'lab_al': extracted['al'],
+      'lab_pr': extracted['pr'],
       'fileName': fileName,
       'checkedAt': FieldValue.serverTimestamp(),
       'checkedAtLocal': DateTime.now().toIso8601String(),
@@ -492,7 +612,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return true;
     } on FirebaseException catch (e) {
       String msg = "Could not save.";
-      if (e.code == 'permission-denied') msg = "Permission denied. Update Firestore Security Rules.";
+      if (e.code == 'permission-denied')
+        msg = "Permission denied. Update Firestore Security Rules.";
       else if (e.code == 'unavailable') msg = "No internet connection.";
       _showSnackBar(msg);
       return false;
@@ -507,7 +628,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         Icon(icon, size: 16, color: const Color(0xFF006064)),
         const SizedBox(width: 6),
-        Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF006064))),
+        Text(title,
+            style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF006064))),
       ],
     );
   }
@@ -516,9 +641,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
-        Flexible(child: Text(value, textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87))),
+        Text(label,
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+        Flexible(
+            child: Text(value,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87))),
       ],
     );
   }
@@ -546,16 +677,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               children: [
                 Container(
-                  width: 8, height: 8,
-                  decoration: BoxDecoration(shape: BoxShape.circle,
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
                       color: isNull ? Colors.grey.shade300 : Colors.teal),
                 ),
                 const SizedBox(width: 8),
-                Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                Text(label,
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
               ],
             ),
-            Text(displayValue, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                color: isNull ? Colors.grey.shade400 : Colors.black87)),
+            Text(displayValue,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isNull ? Colors.grey.shade400 : Colors.black87)),
           ],
         ),
         if (!isLast) const Divider(height: 14),
@@ -564,7 +701,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   String _formatDateTime(DateTime dt) {
-    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
     return "${dt.day} ${months[dt.month - 1]} ${dt.year}, "
         "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
   }
@@ -584,7 +724,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ]),
         backgroundColor: const Color(0xFF006064),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -596,15 +737,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Container(
-            width: 60, height: 60,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
               color: const Color(0xFFE0F7FA).withOpacity(0.5),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Center(child: Icon(Icons.analytics_outlined, size: 30, color: Color(0xFF006064))),
+            child: const Center(
+                child: Icon(Icons.analytics_outlined,
+                    size: 30, color: Color(0xFF006064))),
           ),
           const SizedBox(height: 10),
-          const Text('Risk Level', style: TextStyle(fontSize: 14, color: Colors.grey)),
+          const Text('Risk Level',
+              style: TextStyle(fontSize: 14, color: Colors.grey)),
           const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -612,10 +757,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               border: Border.all(color: Colors.grey.shade300, width: 1.5),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text('- -', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.grey)),
+            child: const Text('- -',
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey)),
           ),
           const SizedBox(height: 4),
-          const Text('Upload PDF\nto see result', textAlign: TextAlign.right,
+          const Text('Upload PDF\nto see result',
+              textAlign: TextAlign.right,
               style: TextStyle(fontSize: 11, color: Colors.grey)),
         ],
       );
@@ -630,34 +780,459 @@ class _DashboardScreenState extends State<DashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Container(
-          width: 60, height: 60,
-          decoration: BoxDecoration(color: _riskColor.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
-          child: Center(child: Icon(Icons.analytics_outlined, size: 30, color: _riskColor)),
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+              color: _riskColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10)),
+          child: Center(
+              child: Icon(Icons.analytics_outlined,
+                  size: 30, color: _riskColor)),
         ),
         const SizedBox(height: 10),
-        const Text('Risk Level', style: TextStyle(fontSize: 14, color: Colors.grey)),
-        Text(riskLabel, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _riskColor)),
-        Text(_diagnosis, textAlign: TextAlign.right, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        const Text('Risk Level',
+            style: TextStyle(fontSize: 14, color: Colors.grey)),
+        Text(riskLabel,
+            style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: _riskColor)),
+        Text(_diagnosis,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontSize: 11, color: Colors.grey)),
         const SizedBox(height: 3),
         if (_isSaving)
           const Row(mainAxisSize: MainAxisSize.min, children: [
-            SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.grey)),
+            SizedBox(
+                width: 10,
+                height: 10,
+                child: CircularProgressIndicator(
+                    strokeWidth: 1.5, color: Colors.grey)),
             SizedBox(width: 4),
-            Text('Saving...', style: TextStyle(fontSize: 10, color: Colors.grey)),
+            Text('Saving...',
+                style: TextStyle(fontSize: 10, color: Colors.grey)),
           ])
         else if (_isSaved)
           const Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(Icons.cloud_done, size: 12, color: Colors.green),
             SizedBox(width: 3),
-            Text('Saved', style: TextStyle(fontSize: 10, color: Colors.green)),
+            Text('Saved',
+                style: TextStyle(fontSize: 10, color: Colors.green)),
           ])
         else
           Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(Icons.cloud_off, size: 12, color: Colors.grey.shade400),
             const SizedBox(width: 3),
-            Text('Not saved', style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
+            Text('Not saved',
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
           ]),
       ],
+    );
+  }
+
+  Widget _buildSelfCheckTab() {
+    const Color darkBlueText = Color(0xFF006064);
+    const Color accentGreen = Color(0xFF81C784);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          const Text('Self-Check',
+              style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: darkBlueText)),
+          const SizedBox(height: 6),
+          Text(
+              'Upload your medical lab PDF to get\nan instant CKD risk assessment.',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+          const SizedBox(height: 32),
+          if (_hasResult) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: _riskColor.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border:
+                    Border.all(color: _riskColor.withOpacity(0.3), width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                        color: _riskColor.withOpacity(0.15),
+                        shape: BoxShape.circle),
+                    child: Icon(Icons.analytics_outlined,
+                        color: _riskColor, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _riskLevel == "L"
+                              ? "LOW RISK"
+                              : _riskLevel == "M"
+                                  ? "MEDIUM RISK"
+                                  : "HIGH RISK",
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: _riskColor),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(_diagnosis,
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey.shade700)),
+                        const SizedBox(height: 4),
+                        if (_isSaved)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.cloud_done,
+                                  size: 13, color: Colors.green),
+                              SizedBox(width: 4),
+                              Text('Saved to records',
+                                  style: TextStyle(
+                                      fontSize: 11, color: Colors.green)),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isLoading ? null : _pickAndUploadPdf,
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
+                  : const Icon(Icons.upload_file, color: Colors.white),
+              label: Text(
+                _isLoading
+                    ? 'Analyzing...'
+                    : _hasResult
+                        ? 'Re-Upload PDF'
+                        : 'Upload Medical PDF',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentGreen,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE0F7FA),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.info_outline,
+                        size: 16, color: Color(0xFF006064)),
+                    SizedBox(width: 6),
+                    Text('Accepted PDF types',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF006064))),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _bulletPointTeal('Kidney Function Test (KFT) report'),
+                _bulletPointTeal(
+                    'Blood test with Creatinine / Sodium / Potassium'),
+                _bulletPointTeal('Renal panel lab report'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bulletPointTeal(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ',
+              style: TextStyle(fontSize: 13, color: Color(0xFF006064))),
+          Expanded(
+              child: Text(text,
+                  style: const TextStyle(fontSize: 13, color: Colors.black87))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomeTab(String displayName) {
+    const Color primaryBlue = Color(0xFFE0F7FA);
+    const Color darkBlueText = Color(0xFF006064);
+    const Color cardBackgroundLight = Color(0xFFF8F8F8);
+    const Color accentGreen = Color(0xFF81C784);
+    const Color accentPurple = Color(0xFF9C27B0);
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+            color: primaryBlue,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.blue,
+                      child: Text(
+                        displayName.isNotEmpty
+                            ? displayName[0].toUpperCase()
+                            : "U",
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Hello, $displayName',
+                            style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: darkBlueText)),
+                        const Text('Welcome back!',
+                            style: TextStyle(fontSize: 16, color: Colors.grey)),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 25),
+                Container(
+                  padding: const EdgeInsets.all(20.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15.0),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3))
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Self-Check',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: darkBlueText)),
+                            const SizedBox(height: 5),
+                            const Text('Upload Medical PDF',
+                                style:
+                                    TextStyle(fontSize: 14, color: Colors.grey)),
+                            const SizedBox(height: 15),
+                            ElevatedButton(
+                              onPressed: _isLoading ? null : _pickAndUploadPdf,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accentGreen,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10.0)),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 25, vertical: 12),
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                          color: Colors.white, strokeWidth: 2))
+                                  : Text(
+                                      _hasResult ? 'Re-Check' : 'Start Check-up',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 16)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(flex: 2, child: _buildRiskDisplay()),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _DashboardCard(
+                          icon: Icons.calendar_month,
+                          iconColor: Colors.purple,
+                          title: 'Dialysis Tracker',
+                          subtitle: 'Schedule Appointment',
+                          buttonText: 'Schedule',
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const DialysisTrackerScreen())),
+                          backgroundColor: cardBackgroundLight,
+                          showButton: true,
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: _DashboardCard(
+                          icon: Icons.water_drop,
+                          iconColor: Colors.lightBlue,
+                          title: 'Water Intake',
+                          subtitle: '1500 ml / 2000 ml',
+                          progressValue: 0.75,
+                          buttonText: 'Log Water',
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const WaterInsideScreen())),
+                          showButton: true,
+                          backgroundColor: cardBackgroundLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 15),
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _DashboardCard(
+                          icon: Icons.restaurant,
+                          iconColor: Colors.green,
+                          title: 'Food Helper',
+                          subtitle: 'Kidney-Safe Recipes',
+                          buttonText: 'Get Suggestions',
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const FoodSuggestionScreen())),
+                          backgroundColor: cardBackgroundLight,
+                          showButton: true,
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: _DashboardCard(
+                          icon: Icons.person_search,
+                          iconColor: Colors.orange,
+                          title: 'Doctor Suggestions',
+                          subtitle: 'Find Specialists',
+                          buttonText: 'Find Doctors',
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const DoctorSuggestionScreen())),
+                          backgroundColor: cardBackgroundLight,
+                          showButton: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 15),
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _DashboardCard(
+                          icon: Icons.people,
+                          iconColor: accentPurple,
+                          title: 'Community Portal',
+                          subtitle: 'Health Tips & More',
+                          buttonText: 'Read Tips',
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const CommunityPortalScreen())),
+                          backgroundColor: cardBackgroundLight,
+                          showButton: true,
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: _DashboardCard(
+                          icon: Icons.campaign,
+                          iconColor: Colors.redAccent,
+                          title: 'Awareness Programs',
+                          subtitle: 'Health Tips & More',
+                          buttonText: 'View More',
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const AwarenessProgramme())),
+                          backgroundColor: cardBackgroundLight,
+                          showButton: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 
@@ -665,202 +1240,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     const Color primaryBlue = Color(0xFFE0F7FA);
     const Color darkBlueText = Color(0xFF006064);
-    const Color cardBackgroundLight = Color(0xFFF8F8F8);
-    const Color accentGreen = Color(0xFF81C784);
-    const Color accentPurple = Color(0xFF9C27B0);
 
-    final User? currentUser = _auth.currentUser;
-    final String displayName = currentUser?.displayName ?? "User";
+    return FutureBuilder<String>(
+      future: _getDisplayName(),
+      builder: (context, snapshot) {
+        final String displayName = snapshot.data ?? "User";
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: primaryBlue,
-        elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: darkBlueText),
-            onPressed: () {},
+        Widget body;
+        switch (_currentNavIndex) {
+          case 1:
+            body = _buildSelfCheckTab();
+            break;
+          case 2:
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const LabTrendsScreen()));
+              setState(() => _currentNavIndex = 0);
+            });
+            body = _buildHomeTab(displayName);
+            break;
+          case 3:
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const FoodSuggestionScreen()));
+              setState(() => _currentNavIndex = 0);
+            });
+            body = _buildHomeTab(displayName);
+            break;
+          case 4:
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()));
+              setState(() => _currentNavIndex = 0);
+            });
+            body = _buildHomeTab(displayName);
+            break;
+          default:
+            body = _buildHomeTab(displayName);
+        }
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: primaryBlue,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            title: const Text('NephroMind',
+                style: TextStyle(
+                    color: darkBlueText,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22)),
+            centerTitle: true,
           ),
-        ),
-        title: const Text('NephroMind',
-            style: TextStyle(color: darkBlueText, fontWeight: FontWeight.bold, fontSize: 22)),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-              color: primaryBlue,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.blue,
-                        child: Text(
-                          displayName.isNotEmpty ? displayName[0].toUpperCase() : "U",
-                          style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Hello, $displayName',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: darkBlueText)),
-                          const Text('Welcome back!', style: TextStyle(fontSize: 16, color: Colors.grey)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 25),
-                  Container(
-                    padding: const EdgeInsets.all(20.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15.0),
-                      boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 2, blurRadius: 5, offset: const Offset(0, 3))],
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Self-Check',
-                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkBlueText)),
-                              const SizedBox(height: 5),
-                              const Text('Upload Medical PDF', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                              const SizedBox(height: 15),
-                              ElevatedButton(
-                                onPressed: _isLoading ? null : _pickAndUploadPdf,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: accentGreen,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
-                                ),
-                                child: _isLoading
-                                    ? const SizedBox(height: 20, width: 20,
-                                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                    : Text(_hasResult ? 'Re-Check' : 'Start Check-up',
-                                        style: const TextStyle(color: Colors.white, fontSize: 16)),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(flex: 2, child: _buildRiskDisplay()),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 15.0,
-                mainAxisSpacing: 15.0,
-                childAspectRatio: 1.1,
-                children: [
-                  _DashboardCard(
-                    icon: Icons.calendar_month,
-                    iconColor: Colors.purple,
-                    title: 'Dialysis Tracker',
-                    subtitle: 'Schedule\nAppointment',
-                    buttonText: 'Schedule Appointment',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DialysisTrackerScreen())),
-                    backgroundColor: cardBackgroundLight,
-                    showButton: true,
-                  ),
-                  _DashboardCard(
-                    icon: Icons.water_drop,
-                    iconColor: Colors.lightBlue,
-                    title: 'Water Intake',
-                    subtitle: '1500 ml / 2000 ml',
-                    progressValue: 0.75,
-                    buttonText: 'Log Water',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WaterInsideScreen())),
-                    showButton: true,
-                    backgroundColor: cardBackgroundLight,
-                  ),
-                  _DashboardCard(
-                    icon: Icons.restaurant,
-                    iconColor: Colors.green,
-                    title: 'Food Helper',
-                    subtitle: 'Kidney-Safe Recipes',
-                    buttonText: 'Get Suggestions',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FoodSuggestionScreen())),
-                    backgroundColor: cardBackgroundLight,
-                    showButton: true,
-                  ),
-                  _DashboardCard(
-                    icon: Icons.person_search,
-                    iconColor: Colors.orange,
-                    title: 'Doctor Suggestions',
-                    subtitle: 'Find Specialists',
-                    buttonText: 'Find Doctors',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DoctorSuggestionScreen())),
-                    backgroundColor: cardBackgroundLight,
-                    showButton: true,
-                  ),
-                  _DashboardCard(
-                    icon: Icons.people,
-                    iconColor: accentPurple,
-                    title: 'Community Portal',
-                    subtitle: 'Health Tips & More',
-                    buttonText: 'Read Tips',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityPortalScreen())),
-                    backgroundColor: cardBackgroundLight,
-                    showButton: true,
-                  ),
-                  _DashboardCard(
-                    icon: Icons.campaign,
-                    iconColor: Colors.redAccent,
-                    title: 'Awareness Programs',
-                    subtitle: 'Health Tips & More',
-                    buttonText: 'View More',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AwarenessProgramme())),
-                    backgroundColor: cardBackgroundLight,
-                    showButton: true,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: darkBlueText,
-        unselectedItemColor: Colors.grey[600],
-        backgroundColor: Colors.white,
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 3) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const FoodSuggestionScreen()));
-          } else if (index == 4) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.check_circle_outline), label: 'Self-Check'),
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Tracker'),
-          BottomNavigationBarItem(icon: Icon(Icons.fastfood), label: 'Food'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
+          body: body,
+          bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: darkBlueText,
+            unselectedItemColor: Colors.grey[600],
+            backgroundColor: Colors.white,
+            currentIndex: _currentNavIndex,
+            onTap: (index) {
+              setState(() => _currentNavIndex = index);
+            },
+            items: const [
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.home), label: 'Home'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.check_circle_outline), label: 'Self-Check'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.show_chart), label: 'Trends'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.fastfood), label: 'Food'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.person), label: 'Profile'),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -898,25 +1356,40 @@ class _DashboardCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(15.0),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(14.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: iconColor, size: 35),
-              const Spacer(),
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+              Icon(icon, color: iconColor, size: 32),
+              const SizedBox(height: 10),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87)),
               if (subtitle != null) ...[
                 const SizedBox(height: 4),
-                Text(subtitle!, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                Text(subtitle!,
+                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
               ],
               if (progressValue != null) ...[
                 const SizedBox(height: 8),
-                LinearProgressIndicator(value: progressValue!, backgroundColor: Colors.grey[300], color: iconColor),
+                LinearProgressIndicator(
+                    value: progressValue!,
+                    backgroundColor: Colors.grey[300],
+                    color: iconColor,
+                    minHeight: 4),
               ],
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               if (showButton && buttonText != null)
-                Text(buttonText!, style: TextStyle(color: iconColor, fontWeight: FontWeight.w600)),
+                Text(buttonText!,
+                    style: TextStyle(
+                        color: iconColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12)),
             ],
           ),
         ),

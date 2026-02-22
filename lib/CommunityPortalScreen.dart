@@ -5,8 +5,10 @@ import 'RiskAssessmentScreen.dart';
 import 'FAQScreen.dart';
 import 'AskDoctorScreen.dart';
 import 'EventCalendarScreen.dart';
+import 'SafeWaterGuideScreen.dart';
+import 'FarmerSafetyTipsScreen.dart';
+import 'HealthyHabitsScreen.dart';
 
-// Main Community Portal Screen
 class CommunityPortalScreen extends StatelessWidget {
   const CommunityPortalScreen({super.key});
 
@@ -21,13 +23,8 @@ class CommunityPortalScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'Community Portal',
-          style: TextStyle(
-            color: darkBlueText,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: const Text('Community Portal',
+            style: TextStyle(color: darkBlueText, fontWeight: FontWeight.bold)),
         backgroundColor: primaryBlue,
         iconTheme: const IconThemeData(color: darkBlueText),
         elevation: 0,
@@ -36,7 +33,6 @@ class CommunityPortalScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Banner
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -50,42 +46,24 @@ class CommunityPortalScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Welcome to the Community',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: darkBlueText,
-                    ),
-                  ),
+                  const Text('Welcome to the Community',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: darkBlueText)),
                   const SizedBox(height: 8),
-                  Text(
-                    'Learn, Connect, and Stay Healthy',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                    ),
-                  ),
+                  Text('Learn, Connect, and Stay Healthy',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700])),
                 ],
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // Quick Actions Grid
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Quick Access',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: darkBlueText,
-                    ),
-                  ),
+                  const Text('Quick Access',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: darkBlueText)),
                   const SizedBox(height: 12),
                   GridView.count(
                     shrinkWrap: true,
@@ -99,53 +77,29 @@ class CommunityPortalScreen extends StatelessWidget {
                         icon: Icons.play_circle_outline,
                         title: 'Multimedia\nLibrary',
                         color: Colors.red,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const MultimediaLibraryScreen(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const MultimediaLibraryScreen())),
                       ),
                       _QuickActionCard(
                         icon: Icons.quiz_outlined,
                         title: 'Risk\nAssessment',
                         color: accentOrange,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RiskAssessmentScreen(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const RiskAssessmentScreen())),
                       ),
                       _QuickActionCard(
                         icon: Icons.help_outline,
                         title: 'FAQs',
                         color: accentPurple,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const FAQScreen(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const FAQScreen())),
                       ),
                       _QuickActionCard(
                         icon: Icons.medical_services_outlined,
                         title: 'Ask a\nDoctor',
                         color: accentGreen,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AskDoctorScreen(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const AskDoctorScreen())),
                       ),
                     ],
                   ),
@@ -155,29 +109,16 @@ class CommunityPortalScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Upcoming Events Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Upcoming Events',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: darkBlueText,
-                    ),
-                  ),
+                  const Text('Upcoming Events',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: darkBlueText)),
                   TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EventCalendarScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const EventCalendarScreen())),
                     child: const Text('View All'),
                   ),
                 ],
@@ -188,43 +129,45 @@ class CommunityPortalScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Featured Resources
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Featured Resources',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: darkBlueText,
-                    ),
-                  ),
+                  const Text('Featured Resources',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: darkBlueText)),
                   const SizedBox(height: 12),
+
+                  // ✅ Safe Water Guide — navigates to SafeWaterGuideScreen
                   _ResourceCard(
                     icon: Icons.water_drop,
                     title: 'Safe Water Guide',
                     subtitle: 'Learn about water purification methods',
                     color: Colors.blue,
-                    onTap: () {},
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const SafeWaterGuideScreen())),
                   ),
                   const SizedBox(height: 8),
+
+                  // ✅ Farmer Safety Tips — navigates to FarmerSafetyTipsScreen
                   _ResourceCard(
                     icon: Icons.agriculture,
                     title: 'Farmer Safety Tips',
                     subtitle: 'Protective measures for agricultural workers',
                     color: Colors.green,
-                    onTap: () {},
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const FarmerSafetyTipsScreen())),
                   ),
                   const SizedBox(height: 8),
+
+                  // ✅ Healthy Habits — navigates to HealthyHabitsScreen
                   _ResourceCard(
                     icon: Icons.favorite,
                     title: 'Healthy Habits',
                     subtitle: 'Daily practices for kidney health',
                     color: Colors.red,
-                    onTap: () {},
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const HealthyHabitsScreen())),
                   ),
                 ],
               ),
@@ -238,19 +181,13 @@ class CommunityPortalScreen extends StatelessWidget {
   }
 }
 
-// Quick Action Card Widget
 class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final Color color;
   final VoidCallback onTap;
 
-  const _QuickActionCard({
-    required this.icon,
-    required this.title,
-    required this.color,
-    required this.onTap,
-  });
+  const _QuickActionCard({required this.icon, required this.title, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -267,14 +204,8 @@ class _QuickActionCard extends StatelessWidget {
             children: [
               Icon(icon, size: 40, color: color),
               const SizedBox(height: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text(title, textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -283,7 +214,6 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
-// Resource Card Widget
 class _ResourceCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -292,11 +222,8 @@ class _ResourceCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ResourceCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
+    required this.icon, required this.title, required this.subtitle,
+    required this.color, required this.onTap,
   });
 
   @override
@@ -310,10 +237,7 @@ class _ResourceCard extends StatelessWidget {
           backgroundColor: color.withOpacity(0.1),
           child: Icon(icon, color: color, size: 24),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
         subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       ),
@@ -321,7 +245,6 @@ class _ResourceCard extends StatelessWidget {
   }
 }
 
-// Upcoming Events List Widget
 class _UpcomingEventsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -334,14 +257,9 @@ class _UpcomingEventsList extends StatelessWidget {
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return const Center(child: Padding(
+              padding: EdgeInsets.all(20.0), child: CircularProgressIndicator()));
         }
-
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -353,10 +271,7 @@ class _UpcomingEventsList extends StatelessWidget {
                     children: [
                       Icon(Icons.event_busy, size: 40, color: Colors.grey[400]),
                       const SizedBox(height: 8),
-                      Text(
-                        'No upcoming events',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
+                      Text('No upcoming events', style: TextStyle(color: Colors.grey[600])),
                     ],
                   ),
                 ),
@@ -364,7 +279,6 @@ class _UpcomingEventsList extends StatelessWidget {
             ),
           );
         }
-
         return SizedBox(
           height: 140,
           child: ListView.builder(
@@ -372,8 +286,7 @@ class _UpcomingEventsList extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
-              final doc = snapshot.data!.docs[index];
-              final data = doc.data() as Map<String, dynamic>;
+              final data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
               return _EventCard(data: data);
             },
           ),
@@ -383,11 +296,14 @@ class _UpcomingEventsList extends StatelessWidget {
   }
 }
 
-// Event Card Widget
 class _EventCard extends StatelessWidget {
   final Map<String, dynamic> data;
-
   const _EventCard({required this.data});
+
+  String _getMonthAbbr(int month) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[month - 1];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -401,106 +317,55 @@ class _EventCard extends StatelessWidget {
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: InkWell(
-          onTap: () {
-            // Navigate to event details
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // Date Badge
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF9C27B0).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        day,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF9C27B0),
-                        ),
-                      ),
-                      Text(
-                        month,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 60, height: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9C27B0).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(width: 12),
-                // Event Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        data['title'] ?? 'Event',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              data['location'] ?? 'TBA',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            data['time'] ?? 'TBA',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(day, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF9C27B0))),
+                    Text(month, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(data['title'] ?? 'Event',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        maxLines: 2, overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Expanded(child: Text(data['location'] ?? 'TBA',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    ]),
+                    const SizedBox(height: 2),
+                    Row(children: [
+                      Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(data['time'] ?? 'TBA',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    ]),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
-  }
-
-  String _getMonthAbbr(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months[month - 1];
   }
 }
