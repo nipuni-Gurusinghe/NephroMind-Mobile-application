@@ -208,7 +208,7 @@ class _AskDoctorScreenState extends State<AskDoctorScreen> {
               
               const SizedBox(height: 16),
               
-              // Category Dropdown
+             
               DropdownButtonFormField<String>(
                 value: _category,
                 decoration: InputDecoration(
