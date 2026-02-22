@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -29,6 +32,73 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     if (picked != null) {
       setState(() => _selectedDate = picked);
+    }
+  }
+
+  // ✅ Brevo Welcome Email
+  Future<void> _sendWelcomeEmail(String email, String fullName) async {
+   
+final String brevoApiKey = dotenv.env['BREVO_API_KEY'] ?? '';
+    const String senderEmail = 'nephromindsafehealth@gmail.com';
+    const String senderName = 'NephroMind';
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.brevo.com/v3/smtp/email'),
+        headers: {
+          'api-key': brevoApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'sender': {'name': senderName, 'email': senderEmail},
+          'to': [
+            {'email': email, 'name': fullName}
+          ],
+          'subject': 'Welcome to NephroMind! 🎉',
+          'htmlContent': '''
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+              <div style="background-color: #006064; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: white; margin: 0;">Welcome to NephroMind</h1>
+                <p style="color: #B2EBF2; margin-top: 8px;">Kidney Health Management</p>
+              </div>
+              <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                <h2 style="color: #006064;">Hello, $fullName! 👋</h2>
+                <p style="color: #555; font-size: 16px;">
+                  Thank you for joining <strong>NephroMind</strong>.
+                  We are here to help you monitor and manage your kidney health every day.
+                </p>
+                <p style="color: #555; font-size: 16px;">Here is what you can do with NephroMind:</p>
+                <ul style="color: #555; font-size: 15px; line-height: 2;">
+                  <li>✅ Complete your kidney self-check</li>
+                  <li>🍽️ Explore kidney-safe recipes</li>
+                  <li>📅 Track your dialysis appointments</li>
+                  <li>💧 Monitor your daily water intake</li>
+                  <li>📊 View your kidney health history</li>
+                </ul>
+                <div style="background-color: #E0F7FA; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                  <p style="color: #006064; margin: 0; font-size: 14px;">
+                    💡 <strong>Tip:</strong> Start by completing your first kidney self-check
+                    to get your personalized health status.
+                  </p>
+                </div>
+                <p style="color: #999; font-size: 13px; text-align: center; margin-top: 30px;">
+                  If you did not create this account, please ignore this email.<br/>
+                  © 2026 NephroMind. All rights reserved.
+                </p>
+              </div>
+            </div>
+          ''',
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        debugPrint('✅ Welcome email sent to $email');
+      } else {
+        debugPrint('❌ Email failed: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      // Email failure will not block registration
+      debugPrint('❌ Email error: $e');
     }
   }
 
@@ -75,7 +145,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         "createdAt": Timestamp.now(),
       });
 
-      // 3️⃣ Navigate to dashboard
+      // 3️⃣ Send welcome email via Brevo
+      await _sendWelcomeEmail(email, fullName);
+
+      // 4️⃣ Navigate to dashboard
       if (mounted) {
         Navigator.pushNamedAndRemoveUntil(
             context, '/dashboard', (route) => false);

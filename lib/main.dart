@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';   // ⭐ IMPORTANT
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:nephromind/welcome_screen.dart';
 import 'package:nephromind/dashboard_screen.dart';
 import 'package:nephromind/registration_screen.dart';
@@ -8,7 +9,8 @@ import 'package:nephromind/DialysisTrackerScreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();     // ✔ Works now
+  await dotenv.load(fileName: ".env");
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 

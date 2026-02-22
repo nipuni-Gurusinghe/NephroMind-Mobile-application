@@ -14,15 +14,17 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Define colors consistent with the application's theme
-  static const Color primaryBlue = Color(0xFFE0F7FA); // Light blue background
-  static const Color darkBlueText = Color(0xFF006064); // Dark blue for titles/accents
-  static const Color accentBlue = Color(0xFF29B6F6); // Log Out/Update Vitals button color
-  static const Color accentOrange = Color(0xFFFFB74D); // Orange for "MEDIUM" risk level
-  static const Color cardBackground = Colors.white; // White card background
+  static const Color primaryBlue = Color(0xFFE0F7FA);
+  static const Color darkBlueText = Color(0xFF006064);
+  static const Color accentBlue = Color(0xFF29B6F6);
+  static const Color accentOrange = Color(0xFFFFB74D);
+  static const Color accentRed = Color(0xFFEF5350);
+  static const Color accentGreen = Color(0xFF66BB6A);
+  static const Color cardBackground = Colors.white;
 
   String? _fullName;
   String? _email;
+  String? _diagnosisLabel;
   bool _isLoading = true;
   User? _currentUser;
 
@@ -32,11 +34,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchUserProfile();
   }
 
-  // Function to fetch user data from Firebase Auth and Firestore
   Future<void> _fetchUserProfile() async {
     _currentUser = FirebaseAuth.instance.currentUser;
     if (_currentUser == null) {
-      // User is not logged in, navigate to welcome/login
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
@@ -44,34 +44,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     try {
+      // Fetch user info
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(_currentUser!.uid)
           .get();
 
       if (userDoc.exists) {
-        setState(() {
-          _fullName = userDoc.data()?['fullName'] ?? 'User';
-          _email = _currentUser!.email;
-        });
+        _fullName = userDoc.data()?['fullName'] ?? 'User';
+        _email = _currentUser!.email;
       } else {
-        setState(() {
-          _fullName = 'User';
-          _email = _currentUser!.email;
-        });
+        _fullName = 'User';
+        _email = _currentUser!.email;
+      }
+
+      // Fetch latest CKD result for this user
+      final ckdQuery = await FirebaseFirestore.instance
+          .collection('ckd_results')
+          .where('userId', isEqualTo: _currentUser!.uid)
+          .orderBy('checkedAt', descending: true)
+          .limit(1)
+          .get();
+
+      if (ckdQuery.docs.isNotEmpty) {
+        _diagnosisLabel = ckdQuery.docs.first.data()['diagnosisLabel'] ?? 'Unknown';
+      } else {
+        _diagnosisLabel = null; // No result found
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load profile: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load profile: $e')),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  // Function to handle name update
   Future<void> _updateName(String newName) async {
     if (_currentUser == null) return;
     try {
@@ -96,7 +110,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Function to handle password update
   Future<void> _updatePassword(String newPassword) async {
     try {
       await _currentUser!.updatePassword(newPassword);
@@ -106,7 +119,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     } on FirebaseAuthException catch (e) {
-      // Handle re-authentication if required for security
       if (e.code == 'requires-recent-login') {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     } on Exception catch (e) {
-       if (mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('An unexpected error occurred: $e')),
         );
@@ -131,16 +143,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Function to handle Log Out
   Future<void> _handleLogOut() async {
     await FirebaseAuth.instance.signOut();
     if (mounted) {
-      // Navigate to the welcome screen and remove all previous routes
       Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
     }
   }
 
-  // Function to show the edit profile modal
   void _showEditProfileModal() {
     showModalBottomSheet(
       context: context,
@@ -160,6 +169,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Returns display label, color based on diagnosisLabel from Firestore
+  Map<String, dynamic> _getStatusInfo(String? label) {
+    if (label == null) {
+      return {'text': 'No Data', 'color': Colors.grey};
+    }
+    switch (label.toLowerCase()) {
+      case 'no ckd':
+        return {'text': 'No CKD', 'color': accentGreen};
+      case 'mild':
+        return {'text': 'MILD', 'color': accentOrange};
+      case 'moderate':
+        return {'text': 'MODERATE', 'color': accentOrange};
+      case 'severe':
+      case 'ckd':
+        return {'text': label.toUpperCase(), 'color': accentRed};
+      default:
+        return {'text': label, 'color': accentOrange};
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -169,20 +198,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    // Determine the name to display (handle null safety)
     final displayFullName = _fullName ?? 'User';
     final firstName = displayFullName.split(' ').first;
+    final statusInfo = _getStatusInfo(_diagnosisLabel);
 
     return Scaffold(
-      backgroundColor: primaryBlue, // Base background color
+      backgroundColor: primaryBlue,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: darkBlueText),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Profile',
@@ -196,7 +223,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: Stack(
         children: [
-          // Background fade effect
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -208,7 +234,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
@@ -220,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Hello, $firstName', // Display first name for a friendly greeting
+                  'Hello, $firstName',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -229,10 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const Text(
                   'Welcome back!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 30),
 
@@ -244,32 +268,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       hint: 'Name',
                       value: displayFullName,
                       icon: Icons.person,
-                      isReadOnly: true, // Display only
                     ),
                     _InfoField(
                       hint: 'Email',
                       value: _email ?? 'N/A',
                       icon: Icons.email,
-                      isReadOnly: true, // Email usually cannot be changed easily
                     ),
                     _InfoField(
                       hint: 'Password',
                       value: '********',
                       icon: Icons.lock,
                       isPassword: true,
-                      isReadOnly: true,
                     ),
                     const SizedBox(height: 10),
                     Align(
                       alignment: Alignment.centerRight,
                       child: OutlinedButton(
-                        onPressed: _showEditProfileModal, // Show edit modal
+                        onPressed: _showEditProfileModal,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: accentBlue,
                           side: const BorderSide(color: accentBlue),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(horizontal: 30),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 30),
                         ),
                         child: const Text('Edit'),
                       ),
@@ -278,7 +300,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // --- 2. Health Information Card (Existing Code) ---
+                // --- 2. Health Information Card ---
                 _ProfileCard(
                   title: 'Health Information',
                   children: [
@@ -289,91 +311,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Kidney Health Status: ',
+                              'Kidney Health Status:',
                               style: TextStyle(
-                                  fontSize: 16, color: Colors.grey[700]),
+                                  fontSize: 15, color: Colors.grey[700]),
                             ),
-                            const Text(
-                              'MEDIUM',
+                            const SizedBox(height: 4),
+                            Text(
+                              _diagnosisLabel != null
+                                  ? statusInfo['text']
+                                  : 'No Results Yet',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: accentOrange,
+                                color: statusInfo['color'],
                               ),
                             ),
-                            const Text(
-                              'Update Vitals',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            const SizedBox(height: 4),
+                            Text(
+                              _diagnosisLabel != null
+                                  ? 'Based on your latest self-check'
+                                  : 'Complete a self-check to see results',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
                             ),
                           ],
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            // TODO: Implement navigation to Vitals Update screen
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: accentBlue,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
+                        // Status icon badge
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: (statusInfo['color'] as Color)
+                                .withOpacity(0.15),
+                            shape: BoxShape.circle,
                           ),
-                          child: const Text('Update Vitals',
-                              style: TextStyle(color: Colors.white)),
+                          child: Icon(
+                            _diagnosisLabel == null ||
+                                    _diagnosisLabel!.toLowerCase() == 'no ckd'
+                                ? Icons.favorite
+                                : Icons.warning_amber_rounded,
+                            color: statusInfo['color'],
+                            size: 30,
+                          ),
                         ),
                       ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // --- 3. Notification Settings Card (Existing Code) ---
-                _ProfileCard(
-                  title: 'Notification Settings',
-                  children: [
-                    _NotificationTile(
-                      label: 'Date Sor Borth',
-                      subLabel: 'Kidney-Safe Recipes',
-                      value: false, // Example default
-                      onChanged: (bool value) {},
-                      icon: Icons.person_outline,
-                    ),
-                    const Divider(height: 20),
-                    _NotificationTile(
-                      label: 'Daily Reminders',
-                      subLabel: 'Height',
-                      value: true, // Example default
-                      onChanged: (bool value) {},
-                      icon: Icons.access_time,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // --- 4. App Settings and Apt Sections (Existing Code) ---
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _ProfileCard(
-                        title: 'App Settings',
-                        children: const [
-                          _SmallSettingItem(label: 'Daily Reminders Alerts'),
-                          _SmallSettingItem(label: 'Language'),
-                          _SmallSettingItem(label: 'Privacy Policy'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: _ProfileCard(
-                        title: 'Apt Sections',
-                        children: [
-                          _ToggleSettingItem(
-                              label: 'Appointment', value: true, onChanged: (v) {}),
-                          const _SmallSettingItem(label: 'Privacy Policy'),
-                        ],
-                      ),
                     ),
                   ],
                 ),
@@ -385,14 +365,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       bottomNavigationBar: _ProfileBottomNavBar(
         accentBlue: accentBlue,
-        onLogOut: _handleLogOut, // Pass the log out function
+        onLogOut: _handleLogOut,
       ),
     );
   }
 }
 
 // -----------------------------------------------------------------------------
-// 🔥 Reusable Sub-Widgets (Updated)
+// 🔥 Reusable Sub-Widgets
 // -----------------------------------------------------------------------------
 
 class _ProfileCard extends StatelessWidget {
@@ -400,14 +380,13 @@ class _ProfileCard extends StatelessWidget {
   final List<Widget> children;
   const _ProfileCard({required this.title, required this.children});
   static const Color darkBlueText = Color(0xFF006064);
-  static const Color cardBackground = Colors.white;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: cardBackground,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(15.0),
         boxShadow: [
           BoxShadow(
@@ -439,17 +418,15 @@ class _ProfileCard extends StatelessWidget {
 
 class _InfoField extends StatelessWidget {
   final String hint;
-  final String value; // New: holds the actual data value
+  final String value;
   final IconData icon;
   final bool isPassword;
-  final bool isReadOnly; // New: determines if it's display-only
 
   const _InfoField({
     required this.hint,
     required this.value,
     required this.icon,
     this.isPassword = false,
-    this.isReadOnly = false, // Default to editable/display for now
   });
 
   @override
@@ -457,19 +434,20 @@ class _InfoField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: TextField(
-        controller: TextEditingController(text: value), // Use controller to set value
-        readOnly: isReadOnly, // Make it display-only
+        controller: TextEditingController(text: value),
+        readOnly: true,
         obscureText: isPassword,
         decoration: InputDecoration(
-          labelText: hint, // Use labelText for better look with a fixed value
+          labelText: hint,
           prefixIcon: Icon(icon, color: _ProfileScreenState.darkBlueText),
           filled: true,
-          fillColor: isReadOnly ? Colors.grey[100] : Colors.grey[50],
+          fillColor: Colors.grey[100],
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         style: const TextStyle(fontWeight: FontWeight.w500),
       ),
@@ -477,92 +455,9 @@ class _InfoField extends StatelessWidget {
   }
 }
 
-class _NotificationTile extends StatelessWidget {
-  final String label;
-  final String subLabel;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  final IconData icon;
-
-  const _NotificationTile({
-    required this.label,
-    required this.subLabel,
-    required this.value,
-    required this.onChanged,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Icon(icon, color: _ProfileScreenState.darkBlueText),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              Text(subLabel, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-            ],
-          ),
-        ),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-          activeColor: _ProfileScreenState.accentBlue,
-        ),
-      ],
-    );
-  }
-}
-
-class _SmallSettingItem extends StatelessWidget {
-  final String label;
-
-  const _SmallSettingItem({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 15, color: Colors.grey[700]),
-      ),
-    );
-  }
-}
-
-class _ToggleSettingItem extends StatelessWidget {
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _ToggleSettingItem(
-      {required this.label, required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(fontSize: 15, color: Colors.grey[700])),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-          activeColor: _ProfileScreenState.accentBlue,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-      ],
-    );
-  }
-}
-
 class _ProfileBottomNavBar extends StatelessWidget {
   final Color accentBlue;
-  final VoidCallback onLogOut; // New: Log out function
+  final VoidCallback onLogOut;
 
   const _ProfileBottomNavBar(
       {required this.accentBlue, required this.onLogOut});
@@ -580,8 +475,9 @@ class _ProfileBottomNavBar extends StatelessWidget {
         children: [
           _NavBarItem(icon: Icons.home, label: 'Home', isSelected: false),
           _NavBarItem(
-              icon: Icons.check_circle_outline, label: 'Self-Check', isSelected: false),
-          // Custom Log Out Button
+              icon: Icons.check_circle_outline,
+              label: 'Self-Check',
+              isSelected: false),
           Container(
             height: 50,
             width: 100,
@@ -590,11 +486,11 @@ class _ProfileBottomNavBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(25),
             ),
             child: TextButton(
-              onPressed: onLogOut, // Call the passed log out function
+              onPressed: onLogOut,
               child: const Text(
                 'Log Out',
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -603,7 +499,8 @@ class _ProfileBottomNavBar extends StatelessWidget {
               label: 'Food',
               isSelected: false,
               notificationCount: 1),
-          _NavBarItem(icon: Icons.person, label: 'Profile', isSelected: true),
+          _NavBarItem(
+              icon: Icons.person, label: 'Profile', isSelected: true),
         ],
       ),
     );
@@ -625,11 +522,12 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? _ProfileScreenState.darkBlueText : Colors.grey[600];
+    final color =
+        isSelected ? _ProfileScreenState.darkBlueText : Colors.grey[600];
 
     return InkWell(
       onTap: () {
-        // TODO: Handle navigation based on the label
+        // TODO: Handle navigation based on label
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -648,23 +546,19 @@ class _NavBarItem extends StatelessWidget {
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
+                      constraints: const BoxConstraints(
+                          minWidth: 12, minHeight: 12),
                       child: Text(
                         '$notificationCount',
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                        ),
+                            color: Colors.white, fontSize: 8),
                         textAlign: TextAlign.center,
                       ),
                     ),
                   ),
               ],
             ),
-            Text(
-              label,
-              style: TextStyle(color: color, fontSize: 11),
-            ),
+            Text(label, style: TextStyle(color: color, fontSize: 11)),
           ],
         ),
       ),
@@ -673,7 +567,7 @@ class _NavBarItem extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-// 🔥 Edit Profile Modal (New Widget)
+// 🔥 Edit Profile Modal
 // -----------------------------------------------------------------------------
 
 class _EditProfileModal extends StatefulWidget {
@@ -718,12 +612,10 @@ class __EditProfileModalState extends State<_EditProfileModal> {
     final newPassword = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    // 1. Update Name (if changed)
     if (newName != widget.currentName && newName.isNotEmpty) {
       await widget.onNameUpdate(newName);
     }
 
-    // 2. Update Password (if provided)
     if (newPassword.isNotEmpty) {
       if (newPassword != confirmPassword) {
         if (mounted) {
@@ -734,7 +626,6 @@ class __EditProfileModalState extends State<_EditProfileModal> {
           return;
         }
       } else if (newPassword.length < 6) {
-        // Basic length check
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -749,9 +640,7 @@ class __EditProfileModalState extends State<_EditProfileModal> {
     }
 
     setState(() => _isLoading = false);
-    if (mounted) {
-      Navigator.of(context).pop(); // Close modal after successful update(s)
-    }
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -771,7 +660,6 @@ class __EditProfileModalState extends State<_EditProfileModal> {
             ),
           ),
           const Divider(height: 30),
-          // --- Name Field ---
           TextField(
             controller: _nameController,
             decoration: const InputDecoration(
@@ -781,8 +669,8 @@ class __EditProfileModalState extends State<_EditProfileModal> {
             ),
           ),
           const SizedBox(height: 20),
-          // --- Password Fields ---
-          const Text('Change Password (Leave blank to keep current password)'),
+          const Text(
+              'Change Password (Leave blank to keep current password)'),
           const SizedBox(height: 10),
           TextField(
             controller: _passwordController,
@@ -817,7 +705,8 @@ class __EditProfileModalState extends State<_EditProfileModal> {
               child: _isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
                   : const Text("Save Changes",
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                      style:
+                          TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ),
           const SizedBox(height: 20),

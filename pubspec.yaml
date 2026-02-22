@@ -36,6 +36,9 @@ dependencies:
   # Charts
   fl_chart: ^0.68.0
 
+  # Environment Variables
+  flutter_dotenv: ^5.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -43,3 +46,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - .env

@@ -14,7 +14,7 @@ import 'AwarenessProgramme.dart';
 import 'FoodSuggestionScreen.dart';
 import 'DoctorSuggestionScreen.dart';
 import 'LabTrendsScreen.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -41,6 +41,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final String apiUrl = "https://ckdbackend-production.up.railway.app/predict";
+
+  // ✅ Brevo credentials
+
+final String _brevoApiKey = dotenv.env['BREVO_API_KEY'] ?? '';
+  static const String _senderEmail = 'nephromindsafehealth@gmail.com';
+  static const String _senderName = 'NephroMind';
 
   static const Map<String, Map<String, String>> _labFieldMeta = {
     'age':    {'label': 'Age',           'unit': 'years'},
@@ -74,6 +80,193 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return user.email!.split('@').first;
     }
     return "User";
+  }
+
+  // ✅ High Risk Alert Email
+  Future<void> _sendHighRiskAlertEmail({
+    required String email,
+    required String fullName,
+    required String diagnosisLabel,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.brevo.com/v3/smtp/email'),
+        headers: {
+          'api-key': _brevoApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'sender': {'name': _senderName, 'email': _senderEmail},
+          'to': [
+            {'email': email, 'name': fullName}
+          ],
+          'subject': '🚨 Urgent: High CKD Risk Detected - NephroMind',
+          'htmlContent': '''
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+
+              <!-- Header -->
+              <div style="background-color: #C62828; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: white; margin: 0;">⚠️ High Risk Alert</h1>
+                <p style="color: #FFCDD2; margin-top: 8px;">NephroMind Kidney Health Management</p>
+              </div>
+
+              <!-- Body -->
+              <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                <h2 style="color: #C62828;">Dear $fullName,</h2>
+
+                <p style="color: #555; font-size: 16px;">
+                  Your recent kidney self-check has returned a <strong style="color: #C62828;">HIGH RISK</strong> result.
+                </p>
+
+                <!-- Result Box -->
+                <div style="background-color: #FFEBEE; border-left: 4px solid #C62828; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 0; color: #C62828; font-size: 15px;">
+                    <strong>Diagnosis:</strong> $diagnosisLabel
+                  </p>
+                  <p style="margin: 8px 0 0; color: #C62828; font-size: 15px;">
+                    <strong>Risk Level:</strong> HIGH
+                  </p>
+                </div>
+
+                <p style="color: #555; font-size: 15px;">
+                  This result suggests your kidney health may need <strong>immediate medical attention</strong>.
+                  Please take the following steps as soon as possible:
+                </p>
+
+                <ul style="color: #555; font-size: 15px; line-height: 2.2;">
+                  <li>🏥 <strong>Consult a nephrologist</strong> (kidney specialist) immediately</li>
+                  <li>📋 Bring your lab report to your appointment</li>
+                  <li>💊 Do not stop or change any medications without doctor advice</li>
+                  <li>💧 Monitor your fluid intake carefully</li>
+                  <li>🍽️ Follow a kidney-friendly diet</li>
+                </ul>
+
+                <!-- Warning Box -->
+                <div style="background-color: #FFF3E0; border-left: 4px solid #FF6F00; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 0; color: #E65100; font-size: 14px;">
+                    ⚠️ <strong>Important:</strong> This result is based on your uploaded lab report.
+                    It is not a substitute for professional medical diagnosis.
+                    Please seek immediate medical attention.
+                  </p>
+                </div>
+
+                <p style="color: #555; font-size: 15px;">
+                  You can use the <strong>Doctor Suggestions</strong> feature in NephroMind
+                  to find kidney specialists near you.
+                </p>
+
+                <p style="color: #999; font-size: 13px; text-align: center; margin-top: 30px;">
+                  This is an automated health alert from NephroMind.<br/>
+                  © 2026 NephroMind. All rights reserved.
+                </p>
+              </div>
+            </div>
+          ''',
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        debugPrint('✅ High risk alert email sent to $email');
+      } else {
+        debugPrint('❌ Alert email failed: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('❌ Alert email error: $e');
+    }
+  }
+
+  // ✅ Medium Risk Alert Email
+  Future<void> _sendMediumRiskAlertEmail({
+    required String email,
+    required String fullName,
+    required String diagnosisLabel,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.brevo.com/v3/smtp/email'),
+        headers: {
+          'api-key': _brevoApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'sender': {'name': _senderName, 'email': _senderEmail},
+          'to': [
+            {'email': email, 'name': fullName}
+          ],
+          'subject': '⚠️ Medium CKD Risk Detected - NephroMind',
+          'htmlContent': '''
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+
+              <!-- Header -->
+              <div style="background-color: #E65100; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: white; margin: 0;">⚠️ Medium Risk Alert</h1>
+                <p style="color: #FFE0B2; margin-top: 8px;">NephroMind Kidney Health Management</p>
+              </div>
+
+              <!-- Body -->
+              <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                <h2 style="color: #E65100;">Dear $fullName,</h2>
+
+                <p style="color: #555; font-size: 16px;">
+                  Your recent kidney self-check has returned a <strong style="color: #E65100;">MEDIUM RISK</strong> result.
+                  While this is not an emergency, it is important to take action now.
+                </p>
+
+                <!-- Result Box -->
+                <div style="background-color: #FFF3E0; border-left: 4px solid #E65100; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 0; color: #E65100; font-size: 15px;">
+                    <strong>Diagnosis:</strong> $diagnosisLabel
+                  </p>
+                  <p style="margin: 8px 0 0; color: #E65100; font-size: 15px;">
+                    <strong>Risk Level:</strong> MEDIUM
+                  </p>
+                </div>
+
+                <p style="color: #555; font-size: 15px;">
+                  We recommend taking the following steps to protect your kidney health:
+                </p>
+
+                <ul style="color: #555; font-size: 15px; line-height: 2.2;">
+                  <li>🩺 <strong>Schedule a doctor visit</strong> within the next few weeks</li>
+                  <li>📋 Share your lab report with your doctor</li>
+                  <li>💧 Stay well hydrated — drink enough water daily</li>
+                  <li>🍽️ Follow a kidney-friendly diet (low sodium, low potassium)</li>
+                  <li>🏃 Maintain a healthy lifestyle and regular exercise</li>
+                  <li>📊 Monitor your kidney health regularly using NephroMind</li>
+                </ul>
+
+                <!-- Info Box -->
+                <div style="background-color: #E8F5E9; border-left: 4px solid #388E3C; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 0; color: #1B5E20; font-size: 14px;">
+                    ✅ <strong>Good news:</strong> Medium risk can often be managed well with
+                    early lifestyle changes and regular monitoring. Taking action now can
+                    prevent progression to higher risk.
+                  </p>
+                </div>
+
+                <p style="color: #555; font-size: 15px;">
+                  Use the <strong>Doctor Suggestions</strong> feature in NephroMind
+                  to find kidney specialists near you.
+                </p>
+
+                <p style="color: #999; font-size: 13px; text-align: center; margin-top: 30px;">
+                  This is an automated health alert from NephroMind.<br/>
+                  © 2026 NephroMind. All rights reserved.
+                </p>
+              </div>
+            </div>
+          ''',
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        debugPrint('✅ Medium risk alert email sent to $email');
+      } else {
+        debugPrint('❌ Medium alert email failed: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('❌ Medium alert email error: $e');
+    }
   }
 
   Future<void> _pickAndUploadPdf() async {
@@ -277,7 +470,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       riskIcon = Icons.dangerous_rounded;
     }
 
-    final int extractedCount = extractedData.values.where((v) => v != null).length;
+    final int extractedCount =
+        extractedData.values.where((v) => v != null).length;
 
     showModalBottomSheet(
       context: context,
@@ -315,8 +509,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               color: Color(0xFF006064))),
                       const SizedBox(height: 4),
                       Text("Review your results before saving",
-                          style:
-                              TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                          style: TextStyle(
+                              fontSize: 13, color: Colors.grey.shade600)),
                     ],
                   ),
                 ),
@@ -325,6 +519,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     controller: scrollController,
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
                     children: [
+                      // ✅ Show warning banner for HIGH and MEDIUM risk
+                      if (severity == "H" || severity == "M") ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: severity == "H"
+                                ? Colors.red.shade50
+                                : Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: severity == "H"
+                                  ? Colors.red.shade300
+                                  : Colors.orange.shade300,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.warning_amber_rounded,
+                                  color: severity == "H"
+                                      ? Colors.red
+                                      : Colors.orange,
+                                  size: 22),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  severity == "H"
+                                      ? 'HIGH RISK detected! A health alert email will be sent to you after saving.'
+                                      : 'MEDIUM RISK detected! A health advisory email will be sent to you after saving.',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: severity == "H"
+                                          ? Colors.red.shade800
+                                          : Colors.orange.shade800,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -343,7 +579,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               decoration: BoxDecoration(
                                   color: riskColor.withOpacity(0.15),
                                   shape: BoxShape.circle),
-                              child: Icon(riskIcon, color: riskColor, size: 30),
+                              child:
+                                  Icon(riskIcon, color: riskColor, size: 30),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -407,8 +644,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                _sectionHeader(
-                                    Icons.biotech_outlined, "Extracted Lab Values"),
+                                _sectionHeader(Icons.biotech_outlined,
+                                    "Extracted Lab Values"),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 3),
@@ -439,8 +676,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ...extractedData.entries
                                   .map((entry) => _buildLabValueRow(
                                       entry.key, entry.value,
-                                      isLast:
-                                          entry.key == extractedData.keys.last))
+                                      isLast: entry.key ==
+                                          extractedData.keys.last))
                                   .toList(),
                           ],
                         ),
@@ -472,8 +709,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.fromLTRB(
-                      24, 12, 24, 24 + MediaQuery.of(ctx).viewInsets.bottom),
+                  padding: EdgeInsets.fromLTRB(24, 12, 24,
+                      24 + MediaQuery.of(ctx).viewInsets.bottom),
                   child: Row(
                     children: [
                       Expanded(
@@ -513,9 +750,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     _isSaved = saved;
                                   });
                                   if (mounted) Navigator.pop(ctx);
-                                  if (saved)
+                                  if (saved) {
                                     _showSuccessSnackBar(
                                         "✓ Result saved to your health records!");
+                                  }
                                 },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF006064),
@@ -584,11 +822,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       severityCode = "L";
     }
 
+    final String diagnosisLabel =
+        prediction['diagnosis_label']?.toString() ?? "Unknown";
+
     final Map<String, dynamic> ckdRecord = {
       'userId': userId,
       'userEmail': currentUser.email ?? "Unknown",
       'hasCkd': prediction['has_ckd'] ?? false,
-      'diagnosisLabel': prediction['diagnosis_label']?.toString() ?? "Unknown",
+      'diagnosisLabel': diagnosisLabel,
       'severityLabel': severityFull,
       'severityCode': severityCode,
       'lab_age': extracted['age'],
@@ -609,6 +850,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final docRef = await _firestore.collection('ckd_results').add(ckdRecord);
       debugPrint("Saved → ckd_results/${docRef.id} | user: $userId");
+
+      // ✅ Send alert email for HIGH or MEDIUM risk
+      if ((severityCode == "H" || severityCode == "M") &&
+          currentUser.email != null) {
+        // Get user's full name from Firestore
+        String fullName = "User";
+        try {
+          final userDoc =
+              await _firestore.collection('users').doc(userId).get();
+          if (userDoc.exists) {
+            fullName = userDoc.data()?['fullName'] ?? "User";
+          }
+        } catch (_) {}
+
+        if (severityCode == "H") {
+          await _sendHighRiskAlertEmail(
+            email: currentUser.email!,
+            fullName: fullName,
+            diagnosisLabel: diagnosisLabel,
+          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                      child: Text(
+                          '🚨 High risk detected! A health alert email has been sent.')),
+                ]),
+                backgroundColor: Colors.red.shade700,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+        } else if (severityCode == "M") {
+          await _sendMediumRiskAlertEmail(
+            email: currentUser.email!,
+            fullName: fullName,
+            diagnosisLabel: diagnosisLabel,
+          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                      child: Text(
+                          '⚠️ Medium risk detected! A health advisory email has been sent.')),
+                ]),
+                backgroundColor: Colors.orange.shade700,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+        }
+      }
+
       return true;
     } on FirebaseException catch (e) {
       String msg = "Could not save.";
@@ -685,7 +993,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(label,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                    style:
+                        TextStyle(fontSize: 13, color: Colors.grey.shade600)),
               ],
             ),
             Text(displayValue,
@@ -893,9 +1202,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 fontSize: 13, color: Colors.grey.shade700)),
                         const SizedBox(height: 4),
                         if (_isSaved)
-                          Row(
+                          const Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
+                            children: [
                               Icon(Icons.cloud_done,
                                   size: 13, color: Colors.green),
                               SizedBox(width: 4),
@@ -1006,7 +1315,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16.0, vertical: 20.0),
             color: primaryBlue,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1036,7 +1346,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 fontWeight: FontWeight.w600,
                                 color: darkBlueText)),
                         const Text('Welcome back!',
-                            style: TextStyle(fontSize: 16, color: Colors.grey)),
+                            style:
+                                TextStyle(fontSize: 16, color: Colors.grey)),
                       ],
                     ),
                   ],
@@ -1070,15 +1381,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     color: darkBlueText)),
                             const SizedBox(height: 5),
                             const Text('Upload Medical PDF',
-                                style:
-                                    TextStyle(fontSize: 14, color: Colors.grey)),
+                                style: TextStyle(
+                                    fontSize: 14, color: Colors.grey)),
                             const SizedBox(height: 15),
                             ElevatedButton(
-                              onPressed: _isLoading ? null : _pickAndUploadPdf,
+                              onPressed:
+                                  _isLoading ? null : _pickAndUploadPdf,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: accentGreen,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10.0)),
+                                    borderRadius:
+                                        BorderRadius.circular(10.0)),
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 25, vertical: 12),
                               ),
@@ -1087,11 +1400,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
-                                          color: Colors.white, strokeWidth: 2))
+                                          color: Colors.white,
+                                          strokeWidth: 2))
                                   : Text(
-                                      _hasResult ? 'Re-Check' : 'Start Check-up',
+                                      _hasResult
+                                          ? 'Re-Check'
+                                          : 'Start Check-up',
                                       style: const TextStyle(
-                                          color: Colors.white, fontSize: 16)),
+                                          color: Colors.white,
+                                          fontSize: 16)),
                             ),
                           ],
                         ),
@@ -1103,7 +1420,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -1122,7 +1438,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (_) => const DialysisTrackerScreen())),
+                                  builder: (_) =>
+                                      const DialysisTrackerScreen())),
                           backgroundColor: cardBackgroundLight,
                           showButton: true,
                         ),
@@ -1162,7 +1479,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (_) => const FoodSuggestionScreen())),
+                                  builder: (_) =>
+                                      const FoodSuggestionScreen())),
                           backgroundColor: cardBackgroundLight,
                           showButton: true,
                         ),
@@ -1219,7 +1537,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (_) => const AwarenessProgramme())),
+                                  builder: (_) =>
+                                      const AwarenessProgramme())),
                           backgroundColor: cardBackgroundLight,
                           showButton: true,
                         ),
@@ -1253,8 +1572,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             break;
           case 2:
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const LabTrendsScreen()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const LabTrendsScreen()));
               setState(() => _currentNavIndex = 0);
             });
             body = _buildHomeTab(displayName);
@@ -1271,8 +1592,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             break;
           case 4:
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const ProfileScreen()));
               setState(() => _currentNavIndex = 0);
             });
             body = _buildHomeTab(displayName);
@@ -1308,7 +1631,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               BottomNavigationBarItem(
                   icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.check_circle_outline), label: 'Self-Check'),
+                  icon: Icon(Icons.check_circle_outline),
+                  label: 'Self-Check'),
               BottomNavigationBarItem(
                   icon: Icon(Icons.show_chart), label: 'Trends'),
               BottomNavigationBarItem(
@@ -1351,7 +1675,8 @@ class _DashboardCard extends StatelessWidget {
     return Card(
       color: backgroundColor,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(15.0),
