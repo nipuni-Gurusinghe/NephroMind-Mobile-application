@@ -15,6 +15,7 @@ import 'FoodSuggestionScreen.dart';
 import 'DoctorSuggestionScreen.dart';
 import 'LabTrendsScreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'book_appointment_screen.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -1543,6 +1544,34 @@ final String _brevoApiKey = dotenv.env['BREVO_API_KEY'] ?? '';
                           showButton: true,
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                // --- NEW CARD SECTION ---
+                const SizedBox(height: 15), 
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _DashboardCard(
+                          icon: Icons.calendar_month, // Calendar icon for appointments
+                          iconColor: Colors.teal,     // Distinct color for the new action
+                          title: 'Book Appointment',
+                          subtitle: 'Consult Specialists',
+                          buttonText: 'Book Now',
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const BookAppointmentScreen())), // Ensure this screen exists
+                          backgroundColor: cardBackgroundLight,
+                          showButton: true,
+                        ),
+                      ),
+                      // We add an empty Expanded space or a second card here later 
+                      // to keep the "Book Appointment" card at 50% width
+                      const SizedBox(width: 15),
+                      const Expanded(child: SizedBox()), 
                     ],
                   ),
                 ),
