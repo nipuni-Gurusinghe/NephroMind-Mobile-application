@@ -12,11 +12,11 @@ class BookAppointmentScreen extends StatefulWidget {
 
 class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   final List<String> hospitals = [
-    "Colombo National Hospital",
-    "Colombo East Base Hospital, Mullariyawa",
-    "Galle National Hospital",
-    "Kandy General Hospital",
-    "Jaffna Teaching Hospital",
+    "Colombo East Base Hospital Mulleriyawa",
+    "National Hospital of Sri Lanka",
+    "Wellawaya Base Hospital",
+    "Karapitiya Teaching Hospital",
+    "National Institute for Nephrology Dialysis & Transplantation (NINDT)",
   ];
 
   String? selectedHospital;
